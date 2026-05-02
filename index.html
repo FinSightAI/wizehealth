@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>WizeHealth — מתחברת לרופאה הדיגיטלית</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#060a14;color:#fff;font-family:Inter,-apple-system,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;position:relative;}
+
+/* Animated orbs */
+.orb{position:fixed;border-radius:50%;filter:blur(80px);opacity:.18;animation:drift 12s ease-in-out infinite;}
+.orb1{width:500px;height:500px;background:#ec4899;top:-150px;left:-100px;animation-delay:0s;}
+.orb2{width:400px;height:400px;background:#8b5cf6;bottom:-100px;right:-80px;animation-delay:-4s;}
+.orb3{width:300px;height:300px;background:#0ea5e9;top:50%;left:60%;animation-delay:-8s;}
+@keyframes drift{0%,100%{transform:translate(0,0) scale(1);}33%{transform:translate(30px,-20px) scale(1.05);}66%{transform:translate(-20px,15px) scale(.95);}
+}
+
+/* Floating hearts/health icons */
+.float-ico{position:fixed;font-size:22px;opacity:0;animation:floatUp 8s ease-in infinite;}
+@keyframes floatUp{0%{opacity:0;transform:translateY(0) rotate(0deg);}10%{opacity:.35;}80%{opacity:.15;}100%{opacity:0;transform:translateY(-100vh) rotate(360deg);}
+}
+
+.card{position:relative;z-index:10;text-align:center;padding:20px;max-width:440px;width:100%;}
+
+/* Logo */
+.logo-wrap{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:32px;}
+.logo-svg{width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,#ec4899,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 8px 32px rgba(236,72,153,.4);}
+.logo-brand{font-size:22px;font-weight:800;letter-spacing:-.5px;}
+.logo-sub{font-size:12px;font-weight:600;color:#ec4899;background:rgba(236,72,153,.12);padding:3px 10px;border-radius:99px;margin-left:6px;}
+
+/* Heart pulse */
+.pulse-wrap{margin:0 auto 28px;position:relative;width:80px;height:80px;}
+.pulse-circle{position:absolute;inset:0;border-radius:50%;border:2px solid rgba(236,72,153,.5);animation:pulse-ring 2s ease-out infinite;}
+.pulse-circle:nth-child(2){animation-delay:.5s;}
+.pulse-circle:nth-child(3){animation-delay:1s;}
+.pulse-inner{position:absolute;inset:15px;border-radius:50%;background:rgba(236,72,153,.15);display:flex;align-items:center;justify-content:center;font-size:26px;}
+@keyframes pulse-ring{0%{transform:scale(.6);opacity:1;}100%{transform:scale(1.4);opacity:0;}}
+
+.title{font-size:20px;font-weight:700;margin-bottom:8px;}
+.subtitle{font-size:14px;color:#6b7280;margin-bottom:32px;line-height:1.6;}
+
+/* Progress bar */
+.prog-wrap{background:rgba(255,255,255,.08);border-radius:99px;height:5px;width:260px;margin:0 auto 12px;overflow:hidden;}
+.prog-bar{height:100%;background:linear-gradient(90deg,#ec4899,#8b5cf6);border-radius:99px;width:0%;transition:width 1s ease;}
+.prog-label{font-size:12px;color:#6b7280;margin-bottom:28px;}
+
+/* Tip card */
+.tip-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:16px 20px;margin-bottom:28px;min-height:72px;display:flex;align-items:center;gap:14px;text-align:right;}
+.tip-ico{font-size:28px;flex-shrink:0;}
+.tip-text{font-size:13px;color:#94a3b8;line-height:1.6;}
+
+/* Stats row */
+.stats{display:flex;gap:16px;justify-content:center;}
+.stat{text-align:center;}
+.stat-n{font-size:18px;font-weight:800;color:#ec4899;}
+.stat-l{font-size:11px;color:#4b5563;margin-top:2px;}
+
+/* ECG line */
+.ecg-wrap{width:260px;margin:0 auto 24px;overflow:hidden;height:40px;}
+.ecg-line{stroke:#ec4899;stroke-width:2;fill:none;stroke-dasharray:600;stroke-dashoffset:600;animation:drawECG 3s linear infinite;}
+@keyframes drawECG{0%{stroke-dashoffset:600;}100%{stroke-dashoffset:0;}}
+</style>
+</head>
+<body>
+
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+
+<script>
+// Floating health icons
+const ICONS = ['💊','🩺','🧬','💉','🏃','🥗','🧠','❤️','🩸','🌿'];
+function spawnIcon() {
+  const el = document.createElement('div');
+  el.className = 'float-ico';
+  el.textContent = ICONS[Math.floor(Math.random()*ICONS.length)];
+  el.style.left = Math.random()*100+'vw';
+  el.style.bottom = '-40px';
+  el.style.animationDuration = (6+Math.random()*6)+'s';
+  el.style.animationDelay = Math.random()*2+'s';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(), 12000);
+}
+setInterval(spawnIcon, 1200);
+</script>
+
+<div class="card">
+
+  <div class="logo-wrap">
+    <div class="logo-svg">🌿</div>
+    <div>
+      <span class="logo-brand">WizeHealth</span>
+      <span class="logo-sub">AI</span>
+    </div>
+  </div>
+
+  <!-- ECG animation -->
+  <div class="ecg-wrap">
+    <svg viewBox="0 0 260 40" width="260" height="40">
+      <polyline class="ecg-line" points="0,20 30,20 45,20 52,5 58,35 65,20 80,20 95,20 102,5 108,35 115,20 130,20 145,20 152,5 158,35 165,20 180,20 195,20 202,5 208,35 215,20 230,20 260,20"/>
+    </svg>
+  </div>
+
+  <h1 class="title" id="titleEl">מתחברת לרופאה הדיגיטלית שלך</h1>
+  <p class="subtitle" id="subEl">AI מנתח מסמכים רפואיים, בדיקות דם ועונה על שאלות בריאות בכל שפה</p>
+
+  <div class="prog-wrap"><div class="prog-bar" id="progBar"></div></div>
+  <div class="prog-label" id="progLabel">מתחברת...</div>
+
+  <div class="tip-card">
+    <span class="tip-ico" id="tipIco">🩺</span>
+    <span class="tip-text" id="tipText">ידעת? WizeHealth יכולה לנתח בדיקות דם מלאות ולהסביר כל ערך בפירוט</span>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-n" id="st1">0</div><div class="stat-l">שאלות רפואיות</div></div>
+    <div class="stat"><div class="stat-n" id="st2">0</div><div class="stat-l">בדיקות מעבדה</div></div>
+    <div class="stat"><div class="stat-n" id="st3">0</div><div class="stat-l">שפות נתמכות</div></div>
+  </div>
+
+</div>
+
+<script>
+const TARGET = 'https://vitara.onrender.com';
+const HEALTH_ENDPOINT = TARGET + '/api/status';
+
+const TIPS = [
+  {i:'🩺', t:'ידעת? WizeHealth יכולה לנתח בדיקות דם מלאות ולהסביר כל ערך בפירוט'},
+  {i:'💊', t:'בדוק אינטראקציות בין תרופות — פשוט הכנס את שמות התרופות שלך'},
+  {i:'🧬', t:'העלה תוצאות בדיקת הדם שלך כתמונה — ה-AI יקרא ויפרש אותן'},
+  {i:'🩻', t:'ניתוח דימות רפואי: הסבר מקצועי לצילומי רנטגן ו-MRI'},
+  {i:'🧠', t:'WizeHealth זוכרת את הפרופיל הבריאותי שלך ונותנת תשובות מותאמות אישית'},
+  {i:'🌿', t:'ייעוץ תזונתי, תוספי מזון ורפואה אינטגרטיבית — בשילוב ראיות מדעיות'},
+  {i:'📋', t:'קבל דוח בריאות מפורט עם המלצות מעשיות שניתן לשתף עם הרופא שלך'},
+  {i:'❤️', t:'מעקב אחרי ערכי הדם לאורך זמן — ראה מגמות ושינויים בבריאות שלך'},
+];
+
+let tipIdx = 0;
+function rotateTip() {
+  const tip = TIPS[tipIdx % TIPS.length];
+  document.getElementById('tipIco').textContent = tip.i;
+  document.getElementById('tipText').textContent = tip.t;
+  tipIdx++;
+}
+setInterval(rotateTip, 5000);
+
+// Counter animation
+function animCounter(id, target, suffix) {
+  let v = 0;
+  const step = Math.ceil(target / 40);
+  const t = setInterval(() => {
+    v = Math.min(v + step, target);
+    document.getElementById(id).textContent = v.toLocaleString() + (suffix||'');
+    if (v >= target) clearInterval(t);
+  }, 40);
+}
+setTimeout(()=>{ animCounter('st1', 1240); animCounter('st2', 380); animCounter('st3', 4); }, 600);
+
+// Progress bar (asymptotic)
+let prog = 0;
+const progEl = document.getElementById('progBar');
+const progLbl = document.getElementById('progLabel');
+const labels = ['מתחברת...','מאתחלת את ה-AI...','טוענת פרופיל בריאות...','כמעט מוכן...'];
+let lIdx = 0;
+const progTimer = setInterval(() => {
+  prog = prog + (95 - prog) * 0.035;
+  progEl.style.width = Math.min(prog, 95) + '%';
+  if (prog > 20 && lIdx === 0) { lIdx=1; progLbl.textContent = labels[1]; }
+  if (prog > 50 && lIdx === 1) { lIdx=2; progLbl.textContent = labels[2]; }
+  if (prog > 78 && lIdx === 2) { lIdx=3; progLbl.textContent = labels[3]; }
+}, 800);
+
+// Ping Render until ready
+let attempts = 0;
+const MAX = 18;
+async function ping() {
+  attempts++;
+  try {
+    const r = await fetch(HEALTH_ENDPOINT, { signal: AbortSignal.timeout(5000) });
+    if (r.ok) { goLive(); return; }
+  } catch(e) {}
+  if (attempts >= MAX) { goLive(); return; }
+  setTimeout(ping, 5000);
+}
+
+function goLive() {
+  clearInterval(progTimer);
+  progEl.style.width = '100%';
+  progEl.style.transition = 'width 0.4s ease';
+  progLbl.textContent = '✅ מוכן!';
+  document.getElementById('titleEl').textContent = 'WizeHealth מוכנה לך';
+  document.getElementById('subEl').textContent = 'מעביר אותך...';
+  setTimeout(() => { window.location.href = TARGET; }, 800);
+}
+
+setTimeout(ping, 1000);
+setTimeout(() => { if (attempts < MAX) goLive(); }, 65000);
+</script>
+</body>
+</html>
