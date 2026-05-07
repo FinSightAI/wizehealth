@@ -78,14 +78,28 @@ body{font-family:'Inter',-apple-system,sans-serif;color:#eef2ff}
 <script>
 const VITARA = 'https://vitara.onrender.com';
 const params = new URLSearchParams(window.location.search);
-const wlToken = params.get('wl_token');
-const wlNick = params.get('wl_nick');
+// Read SSO params from URL OR fall back to localStorage (for repeat visits)
+let wlToken = params.get('wl_token');
+let wlNick = params.get('wl_nick');
+let wlPlan = params.get('wl_plan');
+try {
+  if (!wlToken) {
+    const sso = JSON.parse(localStorage.getItem('wl_sso') || '{}');
+    if (sso.token) wlToken = sso.token;
+    if (sso.nick && !wlNick) wlNick = sso.nick;
+  }
+  if (!wlPlan) {
+    const p = localStorage.getItem('wl_plan');
+    if (p && ['free','pro','yolo'].includes(p)) wlPlan = p;
+  }
+} catch {}
 
-// Build iframe URL — pass SSO params so Vitara picks them up
+// Build iframe URL — pass ALL SSO params so Vitara picks them up
 let iframeUrl = VITARA;
 const qs = new URLSearchParams();
 if (wlToken) qs.set('wl_token', wlToken);
 if (wlNick) qs.set('wl_nick', wlNick);
+if (wlPlan) qs.set('wl_plan', wlPlan);
 const qsStr = qs.toString();
 if (qsStr) iframeUrl += '?' + qsStr;
 
