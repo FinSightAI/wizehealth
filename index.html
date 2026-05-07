@@ -120,37 +120,47 @@ function updateProgress() {
 }
 const progInterval = setInterval(updateProgress, 600);
 
-// Load iframe IMMEDIATELY — don't wait. Splash hides on iframe load event.
-let loaded = false;
-function loadFrame() {
-  if (loaded) return;
-  loaded = true;
-  iframe.src = iframeUrl;
-  iframe.onload = () => {
-    bar.style.width = '100%';
-    progLabel.textContent = '100%';
-    status.textContent = '✓ מוכן';
-    setTimeout(() => {
-      iframe.classList.add('ready');
-      splash.classList.add('hide');
-      clearInterval(progInterval);
-    }, 150);
-  };
-  // Hard fallback: hide splash after 12s even if onload didn't fire (some Render cold-starts confuse onload)
+// Strategy: load iframe IMMEDIATELY in background. Show animated splash for at
+// least MIN_SPLASH_MS so the loading animation always plays. Hide splash when
+// iframe is ready AND minimum time elapsed.
+const MIN_SPLASH_MS = 2500;
+const HARD_FALLBACK_MS = 14000;
+let iframeReady = false;
+const splashStartTime = Date.now();
+
+function tryHideSplash() {
+  const elapsed = Date.now() - splashStartTime;
+  if (elapsed < MIN_SPLASH_MS) {
+    setTimeout(tryHideSplash, MIN_SPLASH_MS - elapsed + 50);
+    return;
+  }
+  bar.style.width = '100%';
+  progLabel.textContent = '100%';
+  status.textContent = '✓ מוכן';
   setTimeout(() => {
-    if (!iframe.classList.contains('ready')) {
-      iframe.classList.add('ready');
-      splash.classList.add('hide');
-      clearInterval(progInterval);
-    }
-  }, 12000);
+    iframe.classList.add('ready');
+    splash.classList.add('hide');
+    clearInterval(progInterval);
+  }, 200);
 }
+
+iframe.src = iframeUrl;
+iframe.onload = () => {
+  iframeReady = true;
+  tryHideSplash();
+};
 
 // Wake up Vitara in parallel (correct endpoint is /health, not /api/status)
 fetch(VITARA + '/health', { method: 'GET', mode: 'no-cors' }).catch(() => {});
 
-// Load immediately — no waiting
-loadFrame();
+// Hard fallback — if iframe.onload never fires (rare), force-hide after 14s
+setTimeout(() => {
+  if (!iframe.classList.contains('ready')) {
+    iframe.classList.add('ready');
+    splash.classList.add('hide');
+    clearInterval(progInterval);
+  }
+}, HARD_FALLBACK_MS);
 </script>
 </body>
 </html>
