@@ -2,179 +2,41 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
 <title>WizeHealth — הבריאות שלך, מנוהלת בחכמה</title>
-<link rel="preconnect" href="https://vitara.onrender.com">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://vitara.onrender.com" crossorigin>
+<link rel="dns-prefetch" href="https://vitara.onrender.com">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-html,body{height:100%;overflow:hidden;background:#030508}
-body{font-family:'Inter',-apple-system,sans-serif;color:#eef2ff}
-
-/* App iframe */
-#app-frame{position:fixed;inset:0;width:100%;height:100%;border:0;background:#030508;opacity:0;transition:opacity .4s ease;z-index:1}
-#app-frame.ready{opacity:1}
-
-/* Splash overlay — disappears when iframe loads */
-#splash{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;background:#030508;z-index:10;transition:opacity .4s ease}
-#splash.hide{opacity:0;pointer-events:none}
-
-/* Animated orbs */
-.orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.18}
-.orb1{width:500px;height:500px;background:#ec4899;top:-150px;left:-100px}
-.orb2{width:400px;height:400px;background:#8b5cf6;bottom:-100px;right:-80px}
-.orb3{width:300px;height:300px;background:#0ea5e9;top:50%;left:60%}
-
-.card{position:relative;z-index:2;text-align:center;padding:20px;max-width:440px;width:100%}
-
-.logo-wrap{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:32px}
-.logo-svg{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#ec4899,#8b5cf6);display:flex;align-items:center;justify-content:center;font-family:'Plus Jakarta Sans',sans-serif;font-weight:900;font-size:24px;color:#fff;box-shadow:0 8px 32px rgba(236,72,153,.35)}
-.logo-brand{font-family:'Plus Jakarta Sans',sans-serif;font-size:22px;font-weight:800;letter-spacing:-.5px}
-
-.pulse-wrap{margin:0 auto 28px;position:relative;width:80px;height:80px}
-.pulse-circle{position:absolute;inset:0;border-radius:50%;border:2px solid rgba(236,72,153,.5);animation:pulse-ring 2s ease-out infinite}
-.pulse-circle:nth-child(2){animation-delay:.5s}
-.pulse-circle:nth-child(3){animation-delay:1s}
-.pulse-inner{position:absolute;inset:15px;border-radius:50%;background:rgba(236,72,153,.15);display:flex;align-items:center;justify-content:center;font-size:24px}
-@keyframes pulse-ring{0%{transform:scale(.6);opacity:1}100%{transform:scale(1.4);opacity:0}}
-
-.title{font-family:'Plus Jakarta Sans',sans-serif;font-size:18px;font-weight:800;margin-bottom:8px}
-.subtitle{font-size:13px;color:#6b7280;margin-bottom:28px;line-height:1.6}
-
-.prog-wrap{background:rgba(255,255,255,.06);border-radius:99px;height:4px;width:240px;margin:0 auto 10px;overflow:hidden}
-.prog-bar{height:100%;background:linear-gradient(90deg,#ec4899,#8b5cf6);border-radius:99px;width:0%;transition:width .8s ease}
-.prog-label{font-size:11px;color:#6b7280}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;background:#030508;overflow:hidden;color:#eef2ff;font-family:'Inter',-apple-system,system-ui,sans-serif}
+  /* The actual app — fills the screen, URL stays as health.wizelife.ai */
+  #app-frame{position:fixed;inset:0;width:100%;height:100%;border:0;background:#030508;z-index:1}
 </style>
 </head>
 <body>
 
-<!-- Vitara loaded in iframe — URL stays as health.wizelife.ai -->
-<iframe id="app-frame" allow="clipboard-write; clipboard-read"></iframe>
-
-<!-- Splash shown while Vitara cold-starts -->
-<div id="splash">
-  <div class="orb orb1"></div>
-  <div class="orb orb2"></div>
-  <div class="orb orb3"></div>
-  <div class="card">
-    <div class="logo-wrap">
-      <div class="logo-svg">W</div>
-      <div class="logo-brand">Wize<span style="background:linear-gradient(135deg,#ec4899,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Health</span></div>
-    </div>
-    <div class="pulse-wrap">
-      <div class="pulse-circle"></div>
-      <div class="pulse-circle"></div>
-      <div class="pulse-circle"></div>
-      <div class="pulse-inner">🌿</div>
-    </div>
-    <div class="title" id="status">מתחברת לרופאה הדיגיטלית...</div>
-    
-    <div class="prog-wrap"><div class="prog-bar" id="bar"></div></div>
-    <div class="prog-label" id="prog-label">0%</div>
-  </div>
-</div>
+<!-- Vitara loaded in an iframe so the URL stays branded -->
+<iframe id="app-frame" src="" allow="clipboard-write; clipboard-read; camera"></iframe>
 
 <script>
-const VITARA = 'https://vitara.onrender.com';
-const params = new URLSearchParams(window.location.search);
-// Read SSO params from URL OR fall back to localStorage (for repeat visits)
-let wlToken = params.get('wl_token');
-let wlNick = params.get('wl_nick');
-let wlPlan = params.get('wl_plan');
-try {
-  if (!wlToken) {
-    const sso = JSON.parse(localStorage.getItem('wl_sso') || '{}');
-    if (sso.token) wlToken = sso.token;
-    if (sso.nick && !wlNick) wlNick = sso.nick;
-  }
-  if (!wlPlan) {
-    const p = localStorage.getItem('wl_plan');
-    if (p && ['free','pro','yolo'].includes(p)) wlPlan = p;
-  }
-} catch {}
+(function () {
+  /* Wake the Render backend in the background — does not block the iframe. */
+  try { fetch('https://vitara.onrender.com/', { mode: 'no-cors', cache: 'no-cache' }).catch(function(){}); } catch (e) {}
 
-// Build iframe URL — pass ALL SSO params so Vitara picks them up
-let iframeUrl = VITARA;
-const qs = new URLSearchParams();
-if (wlToken) qs.set('wl_token', wlToken);
-if (wlNick) qs.set('wl_nick', wlNick);
-if (wlPlan) qs.set('wl_plan', wlPlan);
-const qsStr = qs.toString();
-if (qsStr) iframeUrl += '?' + qsStr;
-
-const iframe = document.getElementById('app-frame');
-const splash = document.getElementById('splash');
-const bar = document.getElementById('bar');
-const progLabel = document.getElementById('prog-label');
-const status = document.getElementById('status');
-
-// Cold-start detection: ping Vitara
-let progress = 0;
-const startTime = Date.now();
-const STATUSES = [
-  'מתחברת לרופאה הדיגיטלית...',
-  'טוענת מודלי AI רפואיים...',
-  'מאתחלת ספריות בריאות...',
-  'מכינה את המערכת...',
-  'כמעט מוכן...'
-];
-let statusIdx = 0;
-
-function updateProgress() {
-  const elapsed = Date.now() - startTime;
-  progress = Math.min(95, (elapsed / 30000) * 100);
-  bar.style.width = progress + '%';
-  progLabel.textContent = Math.round(progress) + '%';
-  const newIdx = Math.min(Math.floor((elapsed / 30000) * STATUSES.length), STATUSES.length - 1);
-  if (newIdx !== statusIdx) {
-    statusIdx = newIdx;
-    status.textContent = STATUSES[statusIdx];
-  }
-}
-const progInterval = setInterval(updateProgress, 600);
-
-// Strategy: load iframe IMMEDIATELY in background. Show animated splash for at
-// least MIN_SPLASH_MS so the loading animation always plays. Hide splash when
-// iframe is ready AND minimum time elapsed.
-const MIN_SPLASH_MS = 2500;
-const HARD_FALLBACK_MS = 14000;
-let iframeReady = false;
-const splashStartTime = Date.now();
-
-function tryHideSplash() {
-  const elapsed = Date.now() - splashStartTime;
-  if (elapsed < MIN_SPLASH_MS) {
-    setTimeout(tryHideSplash, MIN_SPLASH_MS - elapsed + 50);
-    return;
-  }
-  bar.style.width = '100%';
-  progLabel.textContent = '100%';
-  status.textContent = '✓ מוכן';
-  setTimeout(() => {
-    iframe.classList.add('ready');
-    splash.classList.add('hide');
-    clearInterval(progInterval);
-  }, 200);
-}
-
-iframe.src = iframeUrl;
-iframe.onload = () => {
-  iframeReady = true;
-  tryHideSplash();
-};
-
-// Wake up Vitara in parallel (correct endpoint is /health, not /api/status)
-fetch(VITARA + '/health', { method: 'GET', mode: 'no-cors' }).catch(() => {});
-
-// Hard fallback — if iframe.onload never fires (rare), force-hide after 14s
-setTimeout(() => {
-  if (!iframe.classList.contains('ready')) {
-    iframe.classList.add('ready');
-    splash.classList.add('hide');
-    clearInterval(progInterval);
-  }
-}, HARD_FALLBACK_MS);
+  var TARGET = 'https://vitara.onrender.com';
+  var p = new URLSearchParams(location.search);
+  var qs = new URLSearchParams();
+  ['wl_token','wl_nick','wl_plan','lang'].forEach(function (k) {
+    var v = p.get(k); if (v) qs.set(k, v);
+  });
+  var url = qs.toString() ? TARGET + '/?' + qs.toString() : TARGET + '/';
+  document.getElementById('app-frame').src = url;
+})();
 </script>
+
+<!-- WizeLife shared onboarding modal (only fires on first visit; closable) -->
+<script>document.documentElement.setAttribute('data-wize-app', 'health');</script>
+<script src="https://wizelife.ai/js/wize-onboarding.js" defer></script>
+
 </body>
 </html>
