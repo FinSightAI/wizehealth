@@ -9,8 +9,23 @@
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{height:100%;background:#030508;overflow:hidden;color:#eef2ff;font-family:'Inter',-apple-system,system-ui,sans-serif}
+
   /* The actual app — fills the screen, URL stays as health.wizelife.ai */
   #app-frame{position:fixed;inset:0;width:100%;height:100%;border:0;background:#030508;z-index:1}
+
+  /* Inline onboarding — visible immediately on first paint, BEFORE JS or
+     iframe finish loading. Hidden once the user dismisses (sets
+     localStorage.wl_ob_health) OR after 8s as a fail-safe. */
+  #wh-ob{position:fixed;inset:0;z-index:99997;display:flex;align-items:center;justify-content:center;background:rgba(5,8,20,0.6);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);padding:20px;font-family:Inter,-apple-system,system-ui,sans-serif}
+  #wh-ob.gone{display:none}
+  #wh-ob-card{position:relative;width:100%;max-width:340px;background:linear-gradient(180deg,#0f1426 0%,#0a0e1a 100%);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:28px 24px 22px;box-shadow:0 32px 96px rgba(0,0,0,0.55), 0 0 0 1px rgba(236,72,153,0.18)}
+  #wh-ob-icon{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;margin:8px auto 18px;font-size:30px;color:#fff;box-shadow:0 8px 32px rgba(236,72,153,0.35)}
+  #wh-ob h3{margin:0 0 8px;color:#f0f4ff;font-size:18px;font-weight:800;text-align:center;letter-spacing:-0.4px;font-family:'Plus Jakarta Sans',Inter,sans-serif}
+  #wh-ob p{margin:0 0 22px;color:rgba(255,255,255,0.62);font-size:13.5px;line-height:1.55;text-align:center}
+  #wh-ob .row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  #wh-ob .skip{background:none;border:none;color:rgba(255,255,255,0.45);font-size:13px;cursor:pointer;padding:8px 12px;font-family:inherit;border-radius:8px}
+  #wh-ob .next{background:#ec4899;border:none;color:#fff;font-size:13.5px;font-weight:700;cursor:pointer;padding:10px 20px;border-radius:99px;font-family:inherit;box-shadow:0 6px 20px rgba(236,72,153,0.55)}
+  #wh-ob .close{position:absolute;top:14px;left:14px;background:none;border:none;color:rgba(255,255,255,0.55);font-size:18px;cursor:pointer;padding:4px 8px;line-height:1;font-family:inherit;border-radius:8px}
 </style>
 </head>
 <body>
@@ -18,11 +33,29 @@
 <!-- Vitara loaded in an iframe so the URL stays branded -->
 <iframe id="app-frame" src="" allow="clipboard-write; clipboard-read; camera"></iframe>
 
+<!-- ─── Inline onboarding — shows IMMEDIATELY (no JS delay), even before
+     the iframe finishes loading or the SW gives us cached vitara HTML.
+     Hides when user dismisses (saves wl_ob_health=1). On subsequent visits
+     the script removes it before paint. ─── -->
+<div id="wh-ob" hidden>
+  <div id="wh-ob-card">
+    <button class="close" onclick="whObDismiss()" aria-label="סגור">✕</button>
+    <div id="wh-ob-icon">❤️</div>
+    <h3 id="wh-ob-title">WizeHealth</h3>
+    <p id="wh-ob-sub">עוזר רפואי AI — שאל שאלות, נתח בדיקות דם, וקבל מידע מבוסס מחקר.</p>
+    <div class="row">
+      <button class="skip" onclick="whObDismiss()" id="wh-ob-skip">דלג</button>
+      <button class="next" onclick="whObDismiss()" id="wh-ob-next">הבנתי</button>
+    </div>
+  </div>
+</div>
+
 <script>
 (function () {
   /* Wake the Render backend in the background — does not block the iframe. */
   try { fetch('https://vitara.onrender.com/', { mode: 'no-cors', cache: 'no-cache' }).catch(function(){}); } catch (e) {}
 
+  /* Set the iframe src with SSO + lang params carried over from the URL. */
   var TARGET = 'https://vitara.onrender.com';
   var p = new URLSearchParams(location.search);
   var qs = new URLSearchParams();
@@ -31,12 +64,41 @@
   });
   var url = qs.toString() ? TARGET + '/?' + qs.toString() : TARGET + '/';
   document.getElementById('app-frame').src = url;
-})();
-</script>
 
-<!-- WizeLife shared onboarding modal (only fires on first visit; closable) -->
-<script>document.documentElement.setAttribute('data-wize-app', 'health');</script>
-<script src="https://wizelife.ai/js/wize-onboarding.js" defer></script>
+  /* Decide whether to show the inline onboarding. */
+  var lang = (function(){ try { return (localStorage.getItem('wl_lang') || 'he').slice(0,2); } catch(e){ return 'he'; } })();
+  var force = (p.get('ob') === 'force');
+  var seen  = false;
+  try { seen = !!localStorage.getItem('wl_ob_health'); } catch(e){}
+
+  if (force || !seen) {
+    /* Localized copy — set inline so first paint already has it. */
+    var COPY = {
+      he: { t:'WizeHealth', s:'עוזר רפואי AI — שאל שאלות, נתח בדיקות דם, וקבל מידע מבוסס מחקר.', skip:'דלג', next:'הבנתי' },
+      en: { t:'WizeHealth', s:'AI health companion — ask questions, analyze blood tests, get research-based info.', skip:'Skip', next:'Got it' },
+      pt: { t:'WizeHealth', s:'Companheiro de saúde com IA — perguntas, análise de exames, info baseada em pesquisa.', skip:'Pular', next:'Entendi' },
+      es: { t:'WizeHealth', s:'Compañero de salud con IA — preguntas, análisis de sangre, info basada en investigación.', skip:'Saltar', next:'Listo' },
+    };
+    var c = COPY[lang] || COPY.en;
+    document.getElementById('wh-ob-title').textContent = c.t;
+    document.getElementById('wh-ob-sub').textContent   = c.s;
+    document.getElementById('wh-ob-skip').textContent  = c.skip;
+    document.getElementById('wh-ob-next').textContent  = c.next;
+    document.getElementById('wh-ob').hidden = false;
+    /* Fail-safe: if the user never taps anything, vanish after 8 s so the
+       app isn't trapped behind a modal. */
+    setTimeout(function () { whObDismiss(); }, 8000);
+  }
+})();
+
+/* Public dismiss handler — used by skip/got-it/close. Stops the modal
+   covering the iframe and remembers the choice so it doesn't show next time. */
+function whObDismiss() {
+  try { localStorage.setItem('wl_ob_health', '1'); } catch(e){}
+  var el = document.getElementById('wh-ob');
+  if (el) el.classList.add('gone');
+}
+</script>
 
 </body>
 </html>
