@@ -12,62 +12,15 @@
 <link rel="dns-prefetch" href="https://vitara.onrender.com">
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
-  html,body{height:100%;background:#030508;overflow:hidden;color:#eef2ff;font-family:'Inter',-apple-system,system-ui,sans-serif}
-
-  /* The actual app — fills the screen, URL stays as health.wizelife.ai */
-  #app-frame{position:fixed;inset:0;width:100%;height:100%;border:0;background:#030508;z-index:1;opacity:0;transition:opacity .3s ease}
-  #app-frame.ready{opacity:1}
-
-  /* Splash — ALWAYS shown until the iframe finishes loading. This is what
-     iOS captures as the PWA "screenshot", so the user always sees branded
-     WizeHealth content instead of a stale frame. */
-  #wh-splash{position:fixed;inset:0;z-index:99996;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 30%,#1a1f3a 0%,#0a0e1a 100%);font-family:'Plus Jakarta Sans','Inter',system-ui,sans-serif;transition:opacity .35s ease}
-  #wh-splash.gone{opacity:0;pointer-events:none}
-  .wh-card{display:flex;flex-direction:column;align-items:center;gap:14px;padding:24px;text-align:center}
-  .wh-icon{width:68px;height:68px;border-radius:18px;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;font-size:30px;color:#fff;box-shadow:0 12px 40px rgba(236,72,153,0.45)}
-  .wh-brand{font-size:28px;font-weight:900;letter-spacing:-1px;color:#f0f4ff}
-  .wh-brand em{background:linear-gradient(135deg,#ec4899,#a855f7);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-style:normal}
-  .wh-tag{font-size:13px;color:rgba(255,255,255,0.55);max-width:260px;line-height:1.55}
-  .wh-bar{width:120px;height:3px;border-radius:99px;background:rgba(255,255,255,0.08);overflow:hidden;margin-top:6px}
-  .wh-bar i{display:block;width:30%;height:100%;background:linear-gradient(90deg,#ec4899,#a855f7);border-radius:99px;animation:whBar 1.2s ease-in-out infinite}
-  @keyframes whBar{0%{transform:translateX(-100%)}100%{transform:translateX(420%)}}
-
-  /* First-visit only — onboarding row sits BELOW the splash card so the
-     user can read about features while iframe loads, and dismiss with
-     "Got it" to mark the gate. */
-  .wh-ob-extra{margin-top:18px;display:flex;flex-direction:column;align-items:center;gap:10px;max-width:300px}
-  .wh-ob-extra p{font-size:12.5px;color:rgba(255,255,255,0.5);line-height:1.55;text-align:center}
-  .wh-ob-extra button{background:rgba(236,72,153,0.18);color:#fbcfe8;border:1px solid rgba(236,72,153,0.4);padding:8px 18px;border-radius:99px;font:700 12px inherit;cursor:pointer}
+  html,body{height:100%;background:#030508;overflow:hidden}
+  #app-frame{position:fixed;inset:0;width:100%;height:100%;border:0;background:#030508}
 </style>
 </head>
 <body>
-
-<!-- Vitara loaded in an iframe so the URL stays branded -->
-<iframe id="app-frame" src="" allow="clipboard-write; clipboard-read; camera"></iframe>
-
-<!-- Splash — ALWAYS visible on first paint. Hides when the iframe load
-     event fires, OR after a fail-safe timeout. -->
-<div id="wh-splash">
-  <div class="wh-card">
-    <div class="wh-icon">❤️</div>
-    <div class="wh-brand">Wize<em>Health</em></div>
-    <div class="wh-tag" id="wh-tag">מתחבר לרופאה הדיגיטלית...</div>
-    <div class="wh-bar"><i></i></div>
-    <!-- First-visit-only onboarding text + button (set hidden by default,
-         JS un-hides if no wl_ob_health flag). -->
-    <div class="wh-ob-extra" id="wh-ob-extra" hidden>
-      <p id="wh-ob-text">עוזר רפואי AI — שאל שאלות, נתח בדיקות דם, וקבל מידע מבוסס מחקר.</p>
-      <button onclick="whDismiss(true)" id="wh-ob-btn">הבנתי</button>
-    </div>
-  </div>
-</div>
-
+<iframe id="app-frame" allow="clipboard-write; clipboard-read; camera"></iframe>
 <script>
 (function () {
-  /* Wake the Render backend in the background — does not block. */
   try { fetch('https://vitara.onrender.com/', { mode: 'no-cors', cache: 'no-cache' }).catch(function(){}); } catch (e) {}
-
-  /* Set the iframe src with SSO + lang params carried over from the URL. */
   var TARGET = 'https://vitara.onrender.com';
   var p  = new URLSearchParams(location.search);
   var qs = new URLSearchParams();
@@ -76,56 +29,7 @@
   });
   var iframe = document.getElementById('app-frame');
   iframe.src = qs.toString() ? TARGET + '/?' + qs.toString() : TARGET + '/';
-
-  /* Localized splash + onboarding copy */
-  var lang  = (function(){ try { return (localStorage.getItem('wl_lang') || 'he').slice(0,2); } catch(e){ return 'he'; } })();
-  var COPY = {
-    he: { tag:'מתחבר לרופאה הדיגיטלית...', ob:'עוזר רפואי AI — שאל שאלות, נתח בדיקות דם, וקבל מידע מבוסס מחקר.', btn:'הבנתי' },
-    en: { tag:'Connecting to your AI doctor...', ob:'AI health companion — ask questions, analyze blood tests, get research-based info.', btn:'Got it' },
-    pt: { tag:'Conectando ao seu médico de IA...', ob:'Companheiro de saúde com IA — perguntas, exames de sangue, info baseada em pesquisa.', btn:'Entendi' },
-    es: { tag:'Conectando con tu médico IA...', ob:'Compañero de salud con IA — preguntas, análisis, info basada en investigación.', btn:'Listo' },
-  };
-  var c = COPY[lang] || COPY.en;
-  document.getElementById('wh-tag').textContent = c.tag;
-
-  /* First-visit gate — show onboarding text + button only if not seen */
-  var force = (p.get('ob') === 'force');
-  var seen  = false;
-  try { seen = !!localStorage.getItem('wl_ob_health'); } catch(e){}
-  if (!seen || force) {
-    document.getElementById('wh-ob-text').textContent = c.ob;
-    document.getElementById('wh-ob-btn').textContent  = c.btn;
-    document.getElementById('wh-ob-extra').hidden = false;
-  }
-
-  /* Hide splash when iframe finishes loading. The iframe is cross-origin
-     (vitara.onrender.com), so we can't inspect it — but we DO get a 'load'
-     event fired by the browser when the navigation completes. */
-  iframe.addEventListener('load', function () {
-    /* Tiny extra delay so the user actually perceives the brand for a
-       beat — sub-perceptual loads feel jarring on cold-start. */
-    setTimeout(function () { whDismiss(false); }, 350);
-  }, { once: true });
-
-  /* Fail-safe — never trap the app behind the splash for more than 8s
-     even if the iframe load event never fires. */
-  setTimeout(function () { whDismiss(false); }, 8000);
 })();
-
-/* Hide splash + reveal iframe. If `markSeen` is true, also save the
-   wl_ob_health flag so the onboarding text doesn't show again on
-   subsequent visits (the splash itself still shows briefly). */
-function whDismiss(markSeen) {
-  if (markSeen) {
-    try { localStorage.setItem('wl_ob_health', '1'); } catch(e){}
-  }
-  var s = document.getElementById('wh-splash');
-  var i = document.getElementById('app-frame');
-  if (i) i.classList.add('ready');
-  if (s) s.classList.add('gone');
-  setTimeout(function () { if (s && s.parentNode) s.parentNode.removeChild(s); }, 400);
-}
 </script>
-
 </body>
 </html>
