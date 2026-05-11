@@ -273,7 +273,16 @@
   iframe.addEventListener('load', function(){
     setTimeout(function(){ whDismiss(false); }, 350);
   }, {once:true});
-  setTimeout(function(){ whDismiss(false); }, 8000);
+  // After 10s still loading → show "waking up" hint
+  setTimeout(function(){
+    var tag = document.getElementById('wh-tag');
+    if(tag && document.getElementById('wh-splash')){
+      var slow = { he:'שרת מתעורר, עוד רגע...', en:'Server waking up, almost there...', pt:'Servidor acordando, quase lá...', es:'Servidor despertando, casi listo...' };
+      tag.textContent = slow[getLang()] || slow.en;
+    }
+  }, 10000);
+  // Hard fallback at 60s in case load event never fires
+  setTimeout(function(){ whDismiss(false); }, 60000);
   iframe.src = TARGET + (qs.toString() ? '/?' + qs.toString() : '/');
 
   /* ── Onboarding ── */
