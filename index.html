@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
+<script>
+(function(){try{
+  var l=(localStorage.getItem('wl_lang')||'he').slice(0,2);
+  document.documentElement.dir=l==='he'?'rtl':'ltr';
+  document.documentElement.lang=l;
+}catch(e){}})();
+</script>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -86,7 +93,7 @@
   }
 
   /* iframe */
-  #app-frame{position:fixed;top:0;bottom:0;width:auto;height:100%;border:0;background:#030508;z-index:1;opacity:0;transition:opacity .3s ease}
+  #app-frame{position:fixed;top:0;bottom:0;border:0;background:#030508;z-index:1;opacity:0;transition:opacity .3s ease}
   #app-frame.ready{opacity:1}
 
   /* Splash */
@@ -243,6 +250,13 @@
   });
   if(!qs.get('lang')) qs.set('lang', lang);
   var iframe = document.getElementById('app-frame');
+
+  /* ── Splash dismiss ── */
+  iframe.addEventListener('load', function(){
+    setTimeout(function(){ whDismiss(false); }, 350);
+  }, {once:true});
+  setTimeout(function(){ whDismiss(false); }, 8000);
+
   iframe.src = TARGET + (qs.toString() ? '/?' + qs.toString() : '/');
 
   /* ── Onboarding ── */
@@ -260,11 +274,6 @@
   applyLang(lang);
   renderUser();
 
-  /* ── Splash dismiss ── */
-  iframe.addEventListener('load', function(){
-    setTimeout(function(){ whDismiss(false); }, 350);
-  }, {once:true});
-  setTimeout(function(){ whDismiss(false); }, 8000);
 })();
 
 function whDismiss(markSeen){
