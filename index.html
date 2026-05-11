@@ -66,13 +66,23 @@
   }
   .wh-signout:hover{background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.3);color:#fca5a5}
 
-  /* On mobile (≤768px): sidebar collapses to a thin rail, toggled by a button */
+  /* Floating home button (mobile only) */
+  #wh-home-btn{
+    display:none;position:fixed;top:12px;z-index:99998;
+    width:36px;height:36px;border-radius:10px;
+    background:rgba(99,102,241,0.88);border:none;cursor:pointer;
+    align-items:center;justify-content:center;
+    box-shadow:0 4px 16px rgba(0,0,0,0.4);
+  }
+  html[dir="rtl"] #wh-home-btn{right:12px}
+  html[dir="ltr"] #wh-home-btn{left:12px}
+
+  /* On mobile: hide sidebar, iframe goes full-screen */
   @media(max-width:768px){
-    #wh-sidebar{width:48px;padding:12px 6px}
-    #wh-logo span,.wh-sb-title,.wh-sb-app,.wh-sb-section,.wh-lang-grid,.wh-user-name,.wh-user-plan,.wh-signout{display:none}
-    #wh-logo{margin-bottom:auto}
-    html[dir="rtl"] #app-frame{right:48px}
-    html[dir="ltr"] #app-frame{left:48px}
+    #wh-sidebar{display:none}
+    #wh-home-btn{display:flex}
+    html[dir="rtl"] #app-frame{right:0;left:0}
+    html[dir="ltr"] #app-frame{left:0;right:0}
   }
 
   /* iframe */
@@ -125,6 +135,11 @@
   </div>
   <button class="wh-signout" id="wh-signout" style="display:none" onclick="whSignOut()" id="wh-sb-lbl-signout">Sign out</button>
 </nav>
+
+<!-- Floating home button (mobile) -->
+<button id="wh-home-btn" onclick="location.href='https://wizelife.ai/dashboard.html'" title="WizeLife">
+  <svg width="20" height="20" viewBox="0 0 100 100"><text x="50" y="72" text-anchor="middle" font-family="Arial Black,sans-serif" font-weight="900" font-size="68" fill="white">W</text></svg>
+</button>
 
 <!-- Vitara in iframe -->
 <iframe id="app-frame" src="" allow="clipboard-write; clipboard-read; camera"></iframe>
