@@ -105,7 +105,7 @@
 <body>
 
 <!-- Full-screen iframe -->
-<iframe id="app-frame" src="" allow="clipboard-write; clipboard-read; camera"></iframe>
+<iframe id="app-frame" allow="clipboard-write; clipboard-read; camera"></iframe>
 
 <!-- Floating W button -->
 <button id="wh-fab" onclick="whToggleDrawer()" title="WizeHealth menu" aria-label="WizeHealth menu">
@@ -270,9 +270,14 @@
   if(!qs.get('lang')) qs.set('lang', lang);
 
   var iframe = document.getElementById('app-frame');
-  iframe.addEventListener('load', function(){
+  // Set src first — then attach listener. Load event for the real URL fires async.
+  iframe.src = TARGET + (qs.toString() ? '/?' + qs.toString() : '/');
+  iframe.addEventListener('load', function onLoad(){
+    // Only dismiss when Vitara actually loaded (ignore any about:blank/empty fires)
+    if(iframe.src.indexOf('vitara.onrender.com') === -1) return;
+    iframe.removeEventListener('load', onLoad);
     setTimeout(function(){ whDismiss(false); }, 350);
-  }, {once:true});
+  });
   // After 10s still loading → show "waking up" hint
   setTimeout(function(){
     var tag = document.getElementById('wh-tag');
@@ -281,9 +286,8 @@
       tag.textContent = slow[getLang()] || slow.en;
     }
   }, 10000);
-  // Hard fallback at 60s in case load event never fires
+  // Hard fallback at 60s
   setTimeout(function(){ whDismiss(false); }, 60000);
-  iframe.src = TARGET + (qs.toString() ? '/?' + qs.toString() : '/');
 
   /* ── Onboarding ── */
   var c = LANGS[lang] || LANGS.en;
