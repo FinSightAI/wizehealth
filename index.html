@@ -21,80 +21,70 @@
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{height:100%;background:#030508;overflow:hidden;color:#eef2ff;font-family:'Inter',-apple-system,system-ui,sans-serif}
 
-  /* ── Sidebar ── */
-  #wh-sidebar{
-    position:fixed;top:0;bottom:0;width:176px;z-index:99997;
-    background:rgba(8,10,20,0.97);backdrop-filter:blur(20px);
-    border-inline-end:1px solid rgba(255,255,255,0.07);
-    display:flex;flex-direction:column;align-items:center;gap:0;
-    padding:20px 14px 16px;
+  /* Full-screen iframe */
+  #app-frame{position:fixed;inset:0;border:0;background:#030508;z-index:1;opacity:0;transition:opacity .3s ease}
+  #app-frame.ready{opacity:1}
+
+  /* Floating W button */
+  #wh-fab{
+    position:fixed;bottom:20px;z-index:99999;
+    width:44px;height:44px;border-radius:14px;
+    background:linear-gradient(135deg,#6366f1,#8b5cf6);
+    border:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 4px 20px rgba(99,102,241,0.5);
+    transition:transform .15s,box-shadow .15s;
   }
-  /* RTL: right side. LTR: left side — set by JS */
-  html[dir="rtl"] #wh-sidebar{right:0}
-  html[dir="ltr"] #wh-sidebar{left:0}
+  html[dir="rtl"] #wh-fab{right:20px}
+  html[dir="ltr"] #wh-fab{left:20px}
+  #wh-fab:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(99,102,241,0.6)}
+  #wh-fab svg{display:block}
 
-  /* iframe shifts away from sidebar */
-  html[dir="rtl"] #app-frame{right:176px;left:0}
-  html[dir="ltr"] #app-frame{left:176px;right:0}
+  /* Drawer overlay */
+  #wh-overlay{position:fixed;inset:0;z-index:99997;background:rgba(0,0,0,0);pointer-events:none;transition:background .2s}
+  #wh-overlay.open{background:rgba(0,0,0,0.45);pointer-events:all}
 
-  /* Logo */
-  #wh-logo{display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;margin-bottom:24px}
-  #wh-logo svg{flex-shrink:0}
-  #wh-logo span{font-size:10px;font-weight:800;color:#8b5cf6;letter-spacing:.4px}
+  /* Drawer panel */
+  #wh-drawer{
+    position:fixed;bottom:72px;z-index:99998;
+    width:220px;
+    background:rgba(10,12,24,0.97);backdrop-filter:blur(24px);
+    border:1px solid rgba(255,255,255,0.1);border-radius:16px;
+    padding:16px;
+    transform:translateY(12px) scale(0.97);opacity:0;
+    transition:transform .18s ease,opacity .18s ease;
+    pointer-events:none;
+  }
+  html[dir="rtl"] #wh-drawer{right:20px}
+  html[dir="ltr"] #wh-drawer{left:20px}
+  #wh-drawer.open{transform:none;opacity:1;pointer-events:all}
 
-  /* App title */
-  .wh-sb-title{font-size:11px;font-weight:700;color:rgba(255,255,255,0.3);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;text-align:center}
-  .wh-sb-app{font-size:13px;font-weight:800;color:#fbcfe8;margin-bottom:20px;text-align:center}
-
-  /* Lang pills */
-  .wh-sb-section{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-bottom:8px;text-align:center}
-  .wh-lang-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;width:100%;margin-bottom:24px}
+  /* Drawer sections */
+  .wh-dr-app{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.07)}
+  .wh-dr-app-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+  .wh-dr-app-name{font-size:13px;font-weight:800;color:#f0f4ff}
+  .wh-dr-app-sub{font-size:10px;color:rgba(255,255,255,0.35);margin-top:1px}
+  .wh-dr-label{font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-bottom:7px}
+  .wh-lang-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:14px}
   .wh-lang-btn{
     background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);
-    border-radius:8px;padding:6px 4px;font:700 11px 'Inter',sans-serif;
+    border-radius:8px;padding:7px 4px;font:700 11px 'Inter',sans-serif;
     color:rgba(255,255,255,0.45);cursor:pointer;transition:all .15s;text-align:center;
   }
   .wh-lang-btn:hover{background:rgba(236,72,153,0.12);border-color:rgba(236,72,153,0.3);color:#fbcfe8}
   .wh-lang-btn.active{background:rgba(236,72,153,0.18);border-color:rgba(236,72,153,0.5);color:#fbcfe8}
 
-  /* Spacer */
-  .wh-spacer{flex:1}
+  /* User row */
+  .wh-dr-user{display:flex;align-items:center;gap:8px;padding:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;margin-bottom:8px}
+  .wh-dr-user-info{flex:1;min-width:0}
+  .wh-dr-user-name{font-size:12px;font-weight:700;color:#eef2ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .wh-dr-user-plan{font-size:10px;font-weight:600;margin-top:1px}
 
-  /* User info */
-  .wh-user{width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:10px;margin-bottom:8px}
-  .wh-user-name{font-size:12px;font-weight:700;color:#eef2ff;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .wh-user-plan{font-size:10px;font-weight:600;text-align:center;margin-top:3px}
-
-  /* Sign out */
-  .wh-signout{
-    width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
-    border-radius:8px;padding:8px;font:600 11px 'Inter',sans-serif;
-    color:rgba(255,255,255,0.4);cursor:pointer;text-align:center;transition:all .15s;
-  }
-  .wh-signout:hover{background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.3);color:#fca5a5}
-
-  /* Floating home button (mobile only) */
-  #wh-home-btn{
-    display:none;position:fixed;top:12px;z-index:99998;
-    width:36px;height:36px;border-radius:10px;
-    background:rgba(99,102,241,0.88);border:none;cursor:pointer;
-    align-items:center;justify-content:center;
-    box-shadow:0 4px 16px rgba(0,0,0,0.4);
-  }
-  html[dir="rtl"] #wh-home-btn{right:12px}
-  html[dir="ltr"] #wh-home-btn{left:12px}
-
-  /* On mobile: hide sidebar, iframe goes full-screen */
-  @media(max-width:768px){
-    #wh-sidebar{display:none}
-    #wh-home-btn{display:flex}
-    html[dir="rtl"] #app-frame{right:0;left:0}
-    html[dir="ltr"] #app-frame{left:0;right:0}
-  }
-
-  /* iframe */
-  #app-frame{position:fixed;top:0;bottom:0;border:0;background:#030508;z-index:1;opacity:0;transition:opacity .3s ease}
-  #app-frame.ready{opacity:1}
+  /* Portal link + signout */
+  .wh-dr-portal{display:flex;align-items:center;gap:8px;width:100%;background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.18);border-radius:8px;padding:8px 10px;font:600 11px 'Inter',sans-serif;color:rgba(170,180,255,0.8);cursor:pointer;text-decoration:none;margin-bottom:6px;transition:all .15s}
+  .wh-dr-portal:hover{background:rgba(99,102,241,0.15);color:#c7d2fe}
+  .wh-dr-signout{display:flex;align-items:center;gap:8px;width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:8px 10px;font:600 11px 'Inter',sans-serif;color:rgba(255,255,255,0.35);cursor:pointer;transition:all .15s}
+  .wh-dr-signout:hover{background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.25);color:#fca5a5}
 
   /* Splash */
   #wh-splash{position:fixed;inset:0;z-index:99996;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 30%,#1a1f3a 0%,#0a0e1a 100%);font-family:'Plus Jakarta Sans','Inter',system-ui,sans-serif;transition:opacity .35s ease}
@@ -114,18 +104,30 @@
 </head>
 <body>
 
-<!-- Sidebar -->
-<nav id="wh-sidebar">
-  <!-- WizeLife logo (links to portal) -->
-  <a id="wh-logo" href="https://wizelife.ai/dashboard.html">
-    <svg width="32" height="32" viewBox="0 0 100 100"><defs><linearGradient id="wlg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs><rect width="100" height="100" rx="22" fill="url(#wlg)"/><text x="50" y="72" text-anchor="middle" font-family="Arial Black,sans-serif" font-weight="900" font-size="58" fill="white">W</text></svg>
-    <span>WizeLife</span>
-  </a>
+<!-- Full-screen iframe -->
+<iframe id="app-frame" src="" allow="clipboard-write; clipboard-read; camera"></iframe>
 
-  <div class="wh-sb-title" id="wh-sb-lbl-app">APP</div>
-  <div class="wh-sb-app">❤️ WizeHealth</div>
+<!-- Floating W button -->
+<button id="wh-fab" onclick="whToggleDrawer()" title="WizeHealth menu" aria-label="WizeHealth menu">
+  <svg width="22" height="22" viewBox="0 0 100 100"><text x="50" y="72" text-anchor="middle" font-family="Arial Black,sans-serif" font-weight="900" font-size="68" fill="white">W</text></svg>
+</button>
 
-  <div class="wh-sb-section" id="wh-sb-lbl-lang">LANGUAGE</div>
+<!-- Drawer overlay (click to close) -->
+<div id="wh-overlay" onclick="whCloseDrawer()"></div>
+
+<!-- Drawer panel -->
+<div id="wh-drawer">
+  <!-- App header -->
+  <div class="wh-dr-app">
+    <div class="wh-dr-app-icon">❤️</div>
+    <div>
+      <div class="wh-dr-app-name">WizeHealth</div>
+      <div class="wh-dr-app-sub" id="wh-dr-tagline">AI Health Companion</div>
+    </div>
+  </div>
+
+  <!-- Language -->
+  <div class="wh-dr-label" id="wh-dr-lbl-lang">LANGUAGE</div>
   <div class="wh-lang-grid">
     <button class="wh-lang-btn" data-lang="he">HE</button>
     <button class="wh-lang-btn" data-lang="en">EN</button>
@@ -133,23 +135,27 @@
     <button class="wh-lang-btn" data-lang="es">ES</button>
   </div>
 
-  <div class="wh-spacer"></div>
-
-  <!-- User info (shown only when signed in) -->
-  <div class="wh-user" id="wh-user" style="display:none">
-    <div class="wh-user-name" id="wh-user-name">—</div>
-    <div class="wh-user-plan" id="wh-user-plan"></div>
+  <!-- User (hidden when not signed in) -->
+  <div class="wh-dr-user" id="wh-dr-user" style="display:none">
+    <div style="width:28px;height:28px;border-radius:8px;background:rgba(236,72,153,0.2);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">👤</div>
+    <div class="wh-dr-user-info">
+      <div class="wh-dr-user-name" id="wh-dr-user-name">—</div>
+      <div class="wh-dr-user-plan" id="wh-dr-user-plan"></div>
+    </div>
   </div>
-  <button class="wh-signout" id="wh-signout" style="display:none" onclick="whSignOut()" id="wh-sb-lbl-signout">Sign out</button>
-</nav>
 
-<!-- Floating home button (mobile) -->
-<button id="wh-home-btn" onclick="location.href='https://wizelife.ai/dashboard.html'" title="WizeLife">
-  <svg width="20" height="20" viewBox="0 0 100 100"><text x="50" y="72" text-anchor="middle" font-family="Arial Black,sans-serif" font-weight="900" font-size="68" fill="white">W</text></svg>
-</button>
+  <!-- Portal link -->
+  <a class="wh-dr-portal" href="https://wizelife.ai/dashboard.html">
+    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+    <span id="wh-dr-lbl-portal">WizeLife Dashboard</span>
+  </a>
 
-<!-- Vitara in iframe -->
-<iframe id="app-frame" src="" allow="clipboard-write; clipboard-read; camera"></iframe>
+  <!-- Sign out -->
+  <button class="wh-dr-signout" id="wh-dr-signout" style="display:none" onclick="whSignOut()">
+    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+    <span id="wh-dr-lbl-signout">Sign out</span>
+  </button>
+</div>
 
 <!-- Splash -->
 <div id="wh-splash">
@@ -168,10 +174,26 @@
 <script>
 (function () {
   var LANGS = {
-    he: { tag:'מתחבר לרופאה הדיגיטלית...', ob:'עוזר רפואי AI — שאל שאלות, נתח בדיקות דם, וקבל מידע מבוסס מחקר.', btn:'הבנתי', signout:'יציאה', plan_yolo:'⚡ YOLO', plan_pro:'✦ PRO', plan_free:'' },
-    en: { tag:'Connecting to your AI doctor...', ob:'AI health companion — ask questions, analyze blood tests, get research-based info.', btn:'Got it', signout:'Sign out', plan_yolo:'⚡ YOLO', plan_pro:'✦ PRO', plan_free:'' },
-    pt: { tag:'Conectando ao seu médico de IA...', ob:'Companheiro de saúde com IA — perguntas, exames de sangue, info baseada em pesquisa.', btn:'Entendi', signout:'Sair', plan_yolo:'⚡ YOLO', plan_pro:'✦ PRO', plan_free:'' },
-    es: { tag:'Conectando con tu médico IA...', ob:'Compañero de salud con IA — preguntas, análisis, info basada en investigación.', btn:'Listo', signout:'Salir', plan_yolo:'⚡ YOLO', plan_pro:'✦ PRO', plan_free:'' },
+    he: { tag:'מתחבר לרופאה הדיגיטלית...', ob:'עוזר רפואי AI — שאל שאלות, נתח בדיקות דם, וקבל מידע מבוסס מחקר.', btn:'הבנתי', signout:'יציאה', portal:'WizeLife Dashboard', tagline:'AI Health Companion', plan_yolo:'⚡ YOLO', plan_pro:'❆ PRO', plan_free:'' },
+    en: { tag:'Connecting to your AI doctor...', ob:'AI health companion — ask questions, analyze blood tests, get research-based info.', btn:'Got it', signout:'Sign out', portal:'WizeLife Dashboard', tagline:'AI Health Companion', plan_yolo:'⚡ YOLO', plan_pro:'❆ PRO', plan_free:'' },
+    pt: { tag:'Conectando ao seu médico de IA...', ob:'Companheiro de saúde com IA — perguntas, exames de sangue, info baseada em pesquisa.', btn:'Entendi', signout:'Sair', portal:'Painel WizeLife', tagline:'Companheiro de Saúde IA', plan_yolo:'⚡ YOLO', plan_pro:'❆ PRO', plan_free:'' },
+    es: { tag:'Conectando con tu médico IA...', ob:'Compañero de salud con IA — preguntas, análisis, info basada en investigación.', btn:'Listo', signout:'Salir', portal:'Panel WizeLife', tagline:'Compañero de Salud IA', plan_yolo:'⚡ YOLO', plan_pro:'❆ PRO', plan_free:'' },
+  };
+
+  var _drawerOpen = false;
+
+  window.whToggleDrawer = function(){
+    _drawerOpen ? whCloseDrawer() : whOpenDrawer();
+  };
+  function whOpenDrawer(){
+    _drawerOpen = true;
+    document.getElementById('wh-drawer').classList.add('open');
+    document.getElementById('wh-overlay').classList.add('open');
+  }
+  window.whCloseDrawer = function(){
+    _drawerOpen = false;
+    document.getElementById('wh-drawer').classList.remove('open');
+    document.getElementById('wh-overlay').classList.remove('open');
   };
 
   /* ── Language ── */
@@ -182,7 +204,9 @@
     document.documentElement.lang = lang;
     document.documentElement.dir  = isRtl ? 'rtl' : 'ltr';
     document.getElementById('wh-tag').textContent = c.tag;
-    document.getElementById('wh-signout').textContent = c.signout;
+    document.getElementById('wh-dr-lbl-signout').textContent = c.signout;
+    document.getElementById('wh-dr-lbl-portal').textContent = c.portal;
+    document.getElementById('wh-dr-tagline').textContent = c.tagline;
     document.querySelectorAll('.wh-lang-btn').forEach(function(b){
       b.classList.toggle('active', b.dataset.lang === lang);
     });
@@ -191,34 +215,33 @@
   function setLang(lang){
     try{ localStorage.setItem('wl_lang', lang); }catch(e){}
     applyLang(lang);
-    // propagate into iframe via URL reload
     var iframe = document.getElementById('app-frame');
-    if(iframe.src){
+    if(iframe.src && iframe.src !== location.href){
       var u = new URL(iframe.src);
       u.searchParams.set('lang', lang);
       iframe.src = u.toString();
     }
   }
   document.querySelectorAll('.wh-lang-btn').forEach(function(b){
-    b.addEventListener('click', function(){ setLang(b.dataset.lang); });
+    b.addEventListener('click', function(){ setLang(b.dataset.lang); whCloseDrawer(); });
   });
 
-  /* ── SSO / user ── */
-  function getSso(){ try{ return JSON.parse(localStorage.getItem('wl_sso')||'{}'||'{}')}catch(e){return{};} }
+  /* ── SSO ── */
+  function getSso(){ try{ return JSON.parse(localStorage.getItem('wl_sso')||'{}'); }catch(e){ return {}; } }
   function updatePlanBadge(lang){
     var sso = getSso();
     var plan = sso.plan || localStorage.getItem('wl_plan') || 'free';
     var c = LANGS[lang] || LANGS.en;
-    var planEl = document.getElementById('wh-user-plan');
+    var planEl = document.getElementById('wh-dr-user-plan');
     var txt = plan === 'yolo' ? c.plan_yolo : plan === 'pro' ? c.plan_pro : c.plan_free;
     planEl.textContent = txt;
     planEl.style.color = plan === 'yolo' ? '#fbbf24' : plan === 'pro' ? '#34d399' : '#6b7280';
   }
   function renderUser(){
     var sso = getSso();
-    var userEl = document.getElementById('wh-user');
-    var soEl   = document.getElementById('wh-signout');
-    var nameEl = document.getElementById('wh-user-name');
+    var userEl = document.getElementById('wh-dr-user');
+    var soEl   = document.getElementById('wh-dr-signout');
+    var nameEl = document.getElementById('wh-dr-user-name');
     if(sso.token || sso.nick){
       var n = sso.nick || (sso.email && sso.email.split('@')[0]) || '—';
       if(n && /\s/.test(n)) n = n.split(/\s+/)[0];
@@ -230,39 +253,33 @@
 
   /* ── Sign out ── */
   window.whSignOut = function(){
-    try{
-      localStorage.removeItem('wl_sso');
-      localStorage.removeItem('wl_plan');
-      localStorage.removeItem('wl_token');
-    }catch(e){}
+    try{ localStorage.removeItem('wl_sso'); localStorage.removeItem('wl_plan'); localStorage.removeItem('wl_token'); }catch(e){}
     location.href = 'https://wizelife.ai/auth.html';
   };
 
-  /* ── Wake + iframe src ── */
+  /* ── Init + iframe ── */
   try{ fetch('https://vitara.onrender.com/',{mode:'no-cors',cache:'no-cache'}).catch(function(){}); }catch(e){}
   var lang = getLang();
   var TARGET = 'https://vitara.onrender.com';
   var urlP = new URLSearchParams(location.search);
-  var qs   = new URLSearchParams();
+  var qs = new URLSearchParams();
   ['wl_token','wl_nick','wl_plan','lang'].forEach(function(k){
-    var v = urlP.get(k)||''||''||''||''||''||''||''||''||''||''||''||''||''||''||''||''||''||''||''||''||''||''||''||''||'';
+    var v = urlP.get(k)||'';
     if(v) qs.set(k,v);
   });
   if(!qs.get('lang')) qs.set('lang', lang);
-  var iframe = document.getElementById('app-frame');
 
-  /* ── Splash dismiss ── */
+  var iframe = document.getElementById('app-frame');
   iframe.addEventListener('load', function(){
     setTimeout(function(){ whDismiss(false); }, 350);
   }, {once:true});
   setTimeout(function(){ whDismiss(false); }, 8000);
-
   iframe.src = TARGET + (qs.toString() ? '/?' + qs.toString() : '/');
 
   /* ── Onboarding ── */
   var c = LANGS[lang] || LANGS.en;
   var force = (urlP.get('ob') === 'force');
-  var seen  = false;
+  var seen = false;
   try{ seen = !!localStorage.getItem('wl_ob_health'); }catch(e){}
   if(!seen || force){
     document.getElementById('wh-ob-text').textContent = c.ob;
@@ -270,10 +287,11 @@
     document.getElementById('wh-ob-extra').hidden = false;
   }
 
-  /* ── Init ── */
   applyLang(lang);
   renderUser();
 
+  /* Close drawer on Escape */
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape') whCloseDrawer(); });
 })();
 
 function whDismiss(markSeen){
