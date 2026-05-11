@@ -14,13 +14,72 @@
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{height:100%;background:#030508;overflow:hidden;color:#eef2ff;font-family:'Inter',-apple-system,system-ui,sans-serif}
 
-  /* The actual app — fills the screen, URL stays as health.wizelife.ai */
-  #app-frame{position:fixed;inset:0;width:100%;height:100%;border:0;background:#030508;z-index:1;opacity:0;transition:opacity .3s ease}
+  /* ── Sidebar ── */
+  #wh-sidebar{
+    position:fixed;top:0;bottom:0;width:176px;z-index:99997;
+    background:rgba(8,10,20,0.97);backdrop-filter:blur(20px);
+    border-inline-end:1px solid rgba(255,255,255,0.07);
+    display:flex;flex-direction:column;align-items:center;gap:0;
+    padding:20px 14px 16px;
+  }
+  /* RTL: right side. LTR: left side — set by JS */
+  html[dir="rtl"] #wh-sidebar{right:0}
+  html[dir="ltr"] #wh-sidebar{left:0}
+
+  /* iframe shifts away from sidebar */
+  html[dir="rtl"] #app-frame{right:176px;left:0}
+  html[dir="ltr"] #app-frame{left:176px;right:0}
+
+  /* Logo */
+  #wh-logo{display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;margin-bottom:24px}
+  #wh-logo svg{flex-shrink:0}
+  #wh-logo span{font-size:10px;font-weight:800;color:#8b5cf6;letter-spacing:.4px}
+
+  /* App title */
+  .wh-sb-title{font-size:11px;font-weight:700;color:rgba(255,255,255,0.3);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;text-align:center}
+  .wh-sb-app{font-size:13px;font-weight:800;color:#fbcfe8;margin-bottom:20px;text-align:center}
+
+  /* Lang pills */
+  .wh-sb-section{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-bottom:8px;text-align:center}
+  .wh-lang-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;width:100%;margin-bottom:24px}
+  .wh-lang-btn{
+    background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);
+    border-radius:8px;padding:6px 4px;font:700 11px 'Inter',sans-serif;
+    color:rgba(255,255,255,0.45);cursor:pointer;transition:all .15s;text-align:center;
+  }
+  .wh-lang-btn:hover{background:rgba(236,72,153,0.12);border-color:rgba(236,72,153,0.3);color:#fbcfe8}
+  .wh-lang-btn.active{background:rgba(236,72,153,0.18);border-color:rgba(236,72,153,0.5);color:#fbcfe8}
+
+  /* Spacer */
+  .wh-spacer{flex:1}
+
+  /* User info */
+  .wh-user{width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:10px;margin-bottom:8px}
+  .wh-user-name{font-size:12px;font-weight:700;color:#eef2ff;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .wh-user-plan{font-size:10px;font-weight:600;text-align:center;margin-top:3px}
+
+  /* Sign out */
+  .wh-signout{
+    width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
+    border-radius:8px;padding:8px;font:600 11px 'Inter',sans-serif;
+    color:rgba(255,255,255,0.4);cursor:pointer;text-align:center;transition:all .15s;
+  }
+  .wh-signout:hover{background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.3);color:#fca5a5}
+
+  /* On mobile (≤768px): sidebar collapses to a thin rail, toggled by a button */
+  @media(max-width:768px){
+    #wh-sidebar{width:48px;padding:12px 6px}
+    #wh-logo span,.wh-sb-title,.wh-sb-app,.wh-sb-section,.wh-lang-grid,.wh-user-name,.wh-user-plan,.wh-signout{display:none}
+    #wh-logo{margin-bottom:auto}
+    html[dir="rtl"] #app-frame{right:48px}
+    html[dir="ltr"] #app-frame{left:48px}
+  }
+
+  /* iframe */
+  #app-frame{position:fixed;top:0;bottom:0;width:auto;height:100%;border:0;background:#030508;z-index:1;opacity:0;transition:opacity .3s ease}
   #app-frame.ready{opacity:1}
 
-  /* Splash — ALWAYS shown until the iframe finishes loading. This is what
-     iOS captures as the PWA "screenshot", so the user always sees branded
-     WizeHealth content instead of a stale frame. */
+  /* Splash */
   #wh-splash{position:fixed;inset:0;z-index:99996;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 30%,#1a1f3a 0%,#0a0e1a 100%);font-family:'Plus Jakarta Sans','Inter',system-ui,sans-serif;transition:opacity .35s ease}
   #wh-splash.gone{opacity:0;pointer-events:none}
   .wh-card{display:flex;flex-direction:column;align-items:center;gap:14px;padding:24px;text-align:center}
@@ -31,10 +90,6 @@
   .wh-bar{width:120px;height:3px;border-radius:99px;background:rgba(255,255,255,0.08);overflow:hidden;margin-top:6px}
   .wh-bar i{display:block;width:30%;height:100%;background:linear-gradient(90deg,#ec4899,#a855f7);border-radius:99px;animation:whBar 1.2s ease-in-out infinite}
   @keyframes whBar{0%{transform:translateX(-100%)}100%{transform:translateX(420%)}}
-
-  /* First-visit only — onboarding row sits BELOW the splash card so the
-     user can read about features while iframe loads, and dismiss with
-     "Got it" to mark the gate. */
   .wh-ob-extra{margin-top:18px;display:flex;flex-direction:column;align-items:center;gap:10px;max-width:300px}
   .wh-ob-extra p{font-size:12.5px;color:rgba(255,255,255,0.5);line-height:1.55;text-align:center}
   .wh-ob-extra button{background:rgba(236,72,153,0.18);color:#fbcfe8;border:1px solid rgba(236,72,153,0.4);padding:8px 18px;border-radius:99px;font:700 12px inherit;cursor:pointer}
@@ -42,19 +97,45 @@
 </head>
 <body>
 
-<!-- Vitara loaded in an iframe so the URL stays branded -->
+<!-- Sidebar -->
+<nav id="wh-sidebar">
+  <!-- WizeLife logo (links to portal) -->
+  <a id="wh-logo" href="https://wizelife.ai/dashboard.html">
+    <svg width="32" height="32" viewBox="0 0 100 100"><defs><linearGradient id="wlg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs><rect width="100" height="100" rx="22" fill="url(#wlg)"/><text x="50" y="72" text-anchor="middle" font-family="Arial Black,sans-serif" font-weight="900" font-size="58" fill="white">W</text></svg>
+    <span>WizeLife</span>
+  </a>
+
+  <div class="wh-sb-title" id="wh-sb-lbl-app">APP</div>
+  <div class="wh-sb-app">❤️ WizeHealth</div>
+
+  <div class="wh-sb-section" id="wh-sb-lbl-lang">LANGUAGE</div>
+  <div class="wh-lang-grid">
+    <button class="wh-lang-btn" data-lang="he">HE</button>
+    <button class="wh-lang-btn" data-lang="en">EN</button>
+    <button class="wh-lang-btn" data-lang="pt">PT</button>
+    <button class="wh-lang-btn" data-lang="es">ES</button>
+  </div>
+
+  <div class="wh-spacer"></div>
+
+  <!-- User info (shown only when signed in) -->
+  <div class="wh-user" id="wh-user" style="display:none">
+    <div class="wh-user-name" id="wh-user-name">—</div>
+    <div class="wh-user-plan" id="wh-user-plan"></div>
+  </div>
+  <button class="wh-signout" id="wh-signout" style="display:none" onclick="whSignOut()" id="wh-sb-lbl-signout">Sign out</button>
+</nav>
+
+<!-- Vitara in iframe -->
 <iframe id="app-frame" src="" allow="clipboard-write; clipboard-read; camera"></iframe>
 
-<!-- Splash — ALWAYS visible on first paint. Hides when the iframe load
-     event fires, OR after a fail-safe timeout. -->
+<!-- Splash -->
 <div id="wh-splash">
   <div class="wh-card">
     <div class="wh-icon">❤️</div>
     <div class="wh-brand">Wize<em>Health</em></div>
     <div class="wh-tag" id="wh-tag">מתחבר לרופאה הדיגיטלית...</div>
     <div class="wh-bar"><i></i></div>
-    <!-- First-visit-only onboarding text + button (set hidden by default,
-         JS un-hides if no wl_ob_health flag). -->
     <div class="wh-ob-extra" id="wh-ob-extra" hidden>
       <p id="wh-ob-text">עוזר רפואי AI — שאל שאלות, נתח בדיקות דם, וקבל מידע מבוסס מחקר.</p>
       <button onclick="whDismiss(true)" id="wh-ob-btn">הבנתי</button>
@@ -64,68 +145,121 @@
 
 <script>
 (function () {
-  /* Wake the Render backend in the background — does not block. */
-  try { fetch('https://vitara.onrender.com/', { mode: 'no-cors', cache: 'no-cache' }).catch(function(){}); } catch (e) {}
-
-  /* Set the iframe src with SSO + lang params carried over from the URL. */
-  var TARGET = 'https://vitara.onrender.com';
-  var p  = new URLSearchParams(location.search);
-  var qs = new URLSearchParams();
-  ['wl_token','wl_nick','wl_plan','lang'].forEach(function (k) {
-    var v = p.get(k); if (v) qs.set(k, v);
-  });
-  var iframe = document.getElementById('app-frame');
-  iframe.src = qs.toString() ? TARGET + '/?' + qs.toString() : TARGET + '/';
-
-  /* Localized splash + onboarding copy */
-  var lang  = (function(){ try { return (localStorage.getItem('wl_lang') || 'he').slice(0,2); } catch(e){ return 'he'; } })();
-  var COPY = {
-    he: { tag:'מתחבר לרופאה הדיגיטלית...', ob:'עוזר רפואי AI — שאל שאלות, נתח בדיקות דם, וקבל מידע מבוסס מחקר.', btn:'הבנתי' },
-    en: { tag:'Connecting to your AI doctor...', ob:'AI health companion — ask questions, analyze blood tests, get research-based info.', btn:'Got it' },
-    pt: { tag:'Conectando ao seu médico de IA...', ob:'Companheiro de saúde com IA — perguntas, exames de sangue, info baseada em pesquisa.', btn:'Entendi' },
-    es: { tag:'Conectando con tu médico IA...', ob:'Compañero de salud con IA — preguntas, análisis, info basada en investigación.', btn:'Listo' },
+  var LANGS = {
+    he: { tag:'מתחבר לרופאה הדיגיטלית...', ob:'עוזר רפואי AI — שאל שאלות, נתח בדיקות דם, וקבל מידע מבוסס מחקר.', btn:'הבנתי', signout:'יציאה', plan_yolo:'⚡ YOLO', plan_pro:'✦ PRO', plan_free:'' },
+    en: { tag:'Connecting to your AI doctor...', ob:'AI health companion — ask questions, analyze blood tests, get research-based info.', btn:'Got it', signout:'Sign out', plan_yolo:'⚡ YOLO', plan_pro:'✦ PRO', plan_free:'' },
+    pt: { tag:'Conectando ao seu médico de IA...', ob:'Companheiro de saúde com IA — perguntas, exames de sangue, info baseada em pesquisa.', btn:'Entendi', signout:'Sair', plan_yolo:'⚡ YOLO', plan_pro:'✦ PRO', plan_free:'' },
+    es: { tag:'Conectando con tu médico IA...', ob:'Compañero de salud con IA — preguntas, análisis, info basada en investigación.', btn:'Listo', signout:'Salir', plan_yolo:'⚡ YOLO', plan_pro:'✦ PRO', plan_free:'' },
   };
-  var c = COPY[lang] || COPY.en;
-  document.getElementById('wh-tag').textContent = c.tag;
 
-  /* First-visit gate — show onboarding text + button only if not seen */
-  var force = (p.get('ob') === 'force');
+  /* ── Language ── */
+  function getLang(){ try{ return (localStorage.getItem('wl_lang')||'he').slice(0,2); }catch(e){ return 'he'; } }
+  function applyLang(lang){
+    var c = LANGS[lang] || LANGS.en;
+    var isRtl = lang === 'he';
+    document.documentElement.lang = lang;
+    document.documentElement.dir  = isRtl ? 'rtl' : 'ltr';
+    document.getElementById('wh-tag').textContent = c.tag;
+    document.getElementById('wh-signout').textContent = c.signout;
+    document.querySelectorAll('.wh-lang-btn').forEach(function(b){
+      b.classList.toggle('active', b.dataset.lang === lang);
+    });
+    updatePlanBadge(lang);
+  }
+  function setLang(lang){
+    try{ localStorage.setItem('wl_lang', lang); }catch(e){}
+    applyLang(lang);
+    // propagate into iframe via URL reload
+    var iframe = document.getElementById('app-frame');
+    if(iframe.src){
+      var u = new URL(iframe.src);
+      u.searchParams.set('lang', lang);
+      iframe.src = u.toString();
+    }
+  }
+  document.querySelectorAll('.wh-lang-btn').forEach(function(b){
+    b.addEventListener('click', function(){ setLang(b.dataset.lang); });
+  });
+
+  /* ── SSO / user ── */
+  function getSso(){ try{ return JSON.parse(localStorage.getItem('wl_sso')||'{}'||'{}')}catch(e){return{};} }
+  function updatePlanBadge(lang){
+    var sso = getSso();
+    var plan = sso.plan || localStorage.getItem('wl_plan') || 'free';
+    var c = LANGS[lang] || LANGS.en;
+    var planEl = document.getElementById('wh-user-plan');
+    var txt = plan === 'yolo' ? c.plan_yolo : plan === 'pro' ? c.plan_pro : c.plan_free;
+    planEl.textContent = txt;
+    planEl.style.color = plan === 'yolo' ? '#fbbf24' : plan === 'pro' ? '#34d399' : '#6b7280';
+  }
+  function renderUser(){
+    var sso = getSso();
+    var userEl = document.getElementById('wh-user');
+    var soEl   = document.getElementById('wh-signout');
+    var nameEl = document.getElementById('wh-user-name');
+    if(sso.token || sso.nick){
+      var n = sso.nick || (sso.email && sso.email.split('@')[0]) || '—';
+      if(n && /\s/.test(n)) n = n.split(/\s+/)[0];
+      nameEl.textContent = n;
+      userEl.style.display = '';
+      soEl.style.display = '';
+    }
+  }
+
+  /* ── Sign out ── */
+  window.whSignOut = function(){
+    try{
+      localStorage.removeItem('wl_sso');
+      localStorage.removeItem('wl_plan');
+      localStorage.removeItem('wl_token');
+    }catch(e){}
+    location.href = 'https://wizelife.ai/auth.html';
+  };
+
+  /* ── Wake + iframe src ── */
+  try{ fetch('https://vitara.onrender.com/',{mode:'no-cors',cache:'no-cache'}).catch(function(){}); }catch(e){}
+  var lang = getLang();
+  var TARGET = 'https://vitara.onrender.com';
+  var urlP = new URLSearchParams(location.search);
+  var qs   = new URLSearchParams();
+  ['wl_token','wl_nick','wl_plan','lang'].forEach(function(k){
+    var v = urlP.get(k)||''||''||''||''||''||''||''||''||''||''||''||''||''||''||''||''||''||''||''||''||''||''||''||''||'';
+    if(v) qs.set(k,v);
+  });
+  if(!qs.get('lang')) qs.set('lang', lang);
+  var iframe = document.getElementById('app-frame');
+  iframe.src = TARGET + (qs.toString() ? '/?' + qs.toString() : '/');
+
+  /* ── Onboarding ── */
+  var c = LANGS[lang] || LANGS.en;
+  var force = (urlP.get('ob') === 'force');
   var seen  = false;
-  try { seen = !!localStorage.getItem('wl_ob_health'); } catch(e){}
-  if (!seen || force) {
+  try{ seen = !!localStorage.getItem('wl_ob_health'); }catch(e){}
+  if(!seen || force){
     document.getElementById('wh-ob-text').textContent = c.ob;
     document.getElementById('wh-ob-btn').textContent  = c.btn;
     document.getElementById('wh-ob-extra').hidden = false;
   }
 
-  /* Hide splash when iframe finishes loading. The iframe is cross-origin
-     (vitara.onrender.com), so we can't inspect it — but we DO get a 'load'
-     event fired by the browser when the navigation completes. */
-  iframe.addEventListener('load', function () {
-    /* Tiny extra delay so the user actually perceives the brand for a
-       beat — sub-perceptual loads feel jarring on cold-start. */
-    setTimeout(function () { whDismiss(false); }, 350);
-  }, { once: true });
+  /* ── Init ── */
+  applyLang(lang);
+  renderUser();
 
-  /* Fail-safe — never trap the app behind the splash for more than 8s
-     even if the iframe load event never fires. */
-  setTimeout(function () { whDismiss(false); }, 8000);
+  /* ── Splash dismiss ── */
+  iframe.addEventListener('load', function(){
+    setTimeout(function(){ whDismiss(false); }, 350);
+  }, {once:true});
+  setTimeout(function(){ whDismiss(false); }, 8000);
 })();
 
-/* Hide splash + reveal iframe. If `markSeen` is true, also save the
-   wl_ob_health flag so the onboarding text doesn't show again on
-   subsequent visits (the splash itself still shows briefly). */
-function whDismiss(markSeen) {
-  if (markSeen) {
-    try { localStorage.setItem('wl_ob_health', '1'); } catch(e){}
-  }
+function whDismiss(markSeen){
+  if(markSeen){ try{ localStorage.setItem('wl_ob_health','1'); }catch(e){} }
   var s = document.getElementById('wh-splash');
   var i = document.getElementById('app-frame');
-  if (i) i.classList.add('ready');
-  if (s) s.classList.add('gone');
-  setTimeout(function () { if (s && s.parentNode) s.parentNode.removeChild(s); }, 400);
+  if(i) i.classList.add('ready');
+  if(s) s.classList.add('gone');
+  setTimeout(function(){ if(s&&s.parentNode) s.parentNode.removeChild(s); }, 400);
 }
 </script>
-
 </body>
 </html>
