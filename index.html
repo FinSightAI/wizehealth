@@ -44,6 +44,10 @@
 <script>
 (function () {
   try { fetch('https://vitara.onrender.com/', { mode: 'no-cors', cache: 'no-cache' }).catch(function(){}); } catch (e) {}
+  // Keep pinging every 30 s while user is on this page so Render stays warm
+  setInterval(function() {
+    try { fetch('https://vitara.onrender.com/', { mode: 'no-cors', cache: 'no-cache' }).catch(function(){}); } catch(e) {}
+  }, 30000);
 
   var TARGET = 'https://vitara.onrender.com';
   var p  = new URLSearchParams(location.search);
