@@ -51,12 +51,19 @@
 
   var TARGET = 'https://vitara.onrender.com';
   var p  = new URLSearchParams(location.search);
+  // Backward-compat: also accept wl_token from URL fragment.
+  var hp = new URLSearchParams((location.hash || '').replace(/^#/, ''));
   var qs = new URLSearchParams();
-  ['wl_token','wl_nick','wl_plan','lang'].forEach(function (k) {
-    var v = p.get(k); if (v) qs.set(k, v);
+  // Non-sensitive — stay in query.
+  ['wl_nick','wl_plan','lang'].forEach(function (k) {
+    var v = hp.get(k) || p.get(k); if (v) qs.set(k, v);
   });
+  // wl_token rides in the fragment so it never reaches server / CF logs.
+  var tok = hp.get('wl_token') || p.get('wl_token');
   var iframe = document.getElementById('app-frame');
-  iframe.src = qs.toString() ? TARGET + '/?' + qs.toString() : TARGET + '/';
+  var src = TARGET + '/' + (qs.toString() ? '?' + qs.toString() : '');
+  if (tok) src += '#wl_token=' + encodeURIComponent(tok);
+  iframe.src = src;
 
   var lang = 'he';
   try { lang = (localStorage.getItem('wl_lang') || 'he').slice(0,2); } catch(e){}
